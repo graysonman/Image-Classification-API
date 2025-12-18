@@ -3,13 +3,18 @@ from PIL import Image
 import torch
 import torchvision.transforms as transforms
 from src.models.simple_cnn import SimpleCNN
+from pathlib import Path
+
+MODEL_PATH = Path("artifacts/model.pth")
 
 app = FastAPI()
 
-# Load model
-model = SimpleCNN()
-model.load_state_dict(torch.load("model.pth", map_location="cpu"))
-model.eval()
+@app.on_event("startup")
+def load_model():
+    global model
+    model = SimpleCNN()
+    model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
+    model.eval()
 
 # Transform (same as during training)
 transform = transforms.Compose([
