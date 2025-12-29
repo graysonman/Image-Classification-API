@@ -48,7 +48,7 @@ def train_model(epochs, lr):
 
     model = SimpleCNN().to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr,weight_decay=1e-4)
 
     for epoch in range(epochs):
         train_loss = train_epoch(
