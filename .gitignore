@@ -1,5 +1,5 @@
 /artifacts/
-data/
+/data/
 __pycache__/
 *.pyc
 *.pth
