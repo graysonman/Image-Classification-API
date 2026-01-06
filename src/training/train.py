@@ -5,6 +5,8 @@ from tqdm import tqdm
 from src.models.simple_cnn import SimpleCNN
 from src.data.dataset import get_dataloaders
 from pathlib import Path
+from src.training.adversarial import fgsm_attack
+
 
 ARTIFACT_DIR = Path("artifacts")
 ARTIFACT_DIR.mkdir(exist_ok=True)
@@ -25,7 +27,7 @@ def compute_accuracy(model, loader, device):
 
     return correct / total
 
-def train_epoch(model, train_loader, criterion, optimizer, device):
+def train_epoch(model, train_loader, criterion, optimizer, device, epsilon=0.03):
     model.train()
     running_loss = 0.0
     for inputs, labels in tqdm(train_loader, desc="Training", leave=False):
@@ -33,7 +35,13 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
 
         optimizer.zero_grad()
         outputs = model(inputs)
-        loss = criterion(outputs, labels)
+        loss_clean = criterion(outputs, labels)
+
+        adv_inputs = fgsm_attack(model, inputs, labels, epsilon)
+        outputs_adv = model(adv_inputs)
+        loss_adv = criterion(outputs_adv, labels)
+
+        loss = loss_clean + loss_adv
         loss.backward()
         optimizer.step()
 
@@ -52,7 +60,7 @@ def train_model(epochs, lr):
 
     for epoch in range(epochs):
         train_loss = train_epoch(
-            model, train_loader, criterion, optimizer, device
+            model, train_loader, criterion, optimizer, device, epsilon=0.03
         )
 
         train_acc = compute_accuracy(model, train_loader, device)
